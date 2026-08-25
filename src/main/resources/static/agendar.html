@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Novo Agendamento - Salão da Leila</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="card">
+    <h1>Agendamento de Serviços</h1>
+    <p>Cliente: <b id="nome-cliente"></b></p>
+    <hr>
+
+    <form id="form-agendar">
+        <h3>Selecione os Serviços:</h3>
+        <div id="container-servicos" class="lista-servicos">Carregando serviços...</div>
+
+        <h3>Data e Hora:</h3>
+        <input type="datetime-local" id="data-hora" step="1800" required>
+
+        <h3>Observações:</h3>
+        <textarea id="observacao" rows="2" placeholder="Alguma preferência?"></textarea>
+
+        <button id="btn-agendar" type="button">Confirmar Agendamento</button>
+        <p id="mensagem-erro" class="mensagem-erro" role="alert"></p>
+    </form>
+
+    <p style="margin-top: 15px;">
+        <a href="historico.html">Ver Meus Agendamentos</a> |
+        <a href="index.html">Sair</a>
+    </p>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/agendar.js"></script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Salão da Leila</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="card">
+    <h1>Salão da Leila</h1>
+    <h3>Selecione um usuário para navegar:</h3>
+
+    <label>Usuário:</label>
+    <select id="select-usuario"></select>
+
+    <button id="btn-entrar">Entrar no Sistema</button>
+    <p><a href="cadastro.html">Criar nova conta</a></p>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+    let usuariosCache = [];
+
+    async function carregarUsuarios() {
+        try {
+            usuariosCache = await apiGet('/usuarios');
+            const select = document.getElementById('select-usuario');
+            select.innerHTML = '';
+
+            usuariosCache.forEach(u => {
+                const opt = document.createElement('option');
+                opt.value = u.id;
+                opt.textContent = `${u.nome} (${u.perfil}) - ${u.email}`;
+                select.appendChild(opt);
+            });
+        } catch (err) {
+            alert('Erro ao carregar usuários. Verifique se o backend está rodando.');
+        }
+    }
+
+    document.getElementById('btn-entrar').addEventListener('click', () => {
+        const id = document.getElementById('select-usuario').value;
+        const usuario = usuariosCache.find(u => u.id === id);
+
+        if (!usuario) return alert('Selecione um usuário válido.');
+
+        localStorage.setItem('usuarioId', usuario.id);
+        localStorage.setItem('usuarioNome', usuario.nome);
+        localStorage.setItem('usuarioPerfil', usuario.perfil);
+
+        if (usuario.perfil === 'ADMIN') {
+            window.location.href = 'admin.html';
+        } else {
+            window.location.href = 'historico.html';
+        }
+    });
+
+    carregarUsuarios();
+</script>
+</body>
+</html>

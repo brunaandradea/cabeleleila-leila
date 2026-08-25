@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel Administrativo - Salão da Leila</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<h1>Painel de Controle - Leila</h1>
+
+<div class="card">
+    <h2>Relatório Semanal</h2>
+    <div class="grid-2">
+        <div>Total Agendamentos: <b id="rep-total">0</b></div>
+        <div>Concluídos: <b id="rep-concluidos">0</b></div>
+        <div>Cancelados: <b id="rep-cancelados">0</b></div>
+        <div>Faturamento: <b id="rep-faturamento">R$ 0,00</b></div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Todos os Agendamentos</h2>
+    <ul id="lista-agendamentos-admin">Carregando agendamentos...</ul>
+</div>
+
+<div class="card">
+    <h2>Serviços do Salão</h2>
+    <ul id="lista-servicos-admin"></ul>
+</div>
+
+<p><a href="index.html">Sair para Seleção de Usuário</a></p>
+
+<script src="js/api.js"></script>
+<script>
+
+    const usuarioIdLogado = localStorage.getItem('usuarioId');
+    const perfilLogado = localStorage.getItem('usuarioPerfil');
+    if (!usuarioIdLogado || perfilLogado !== 'ADMIN') {
+        window.location.href = 'index.html';
+    }
+
+    async function carregarRelatorio() {
+        try {
+            const r = await apiGet('/agendamentos/relatorio-semanal');
+            document.getElementById('rep-total').textContent = r.totalAgendamentos;
+            document.getElementById('rep-concluidos').textContent = r.totalConcluidos;
+            document.getElementById('rep-cancelados').textContent = r.totalCancelados;
+            document.getElementById('rep-faturamento').textContent = `R$ ${r.faturamentoTotal.toFixed(2)}`;
+        } catch (err) {
+            console.error('Erro ao carregar relatório:', err);
+        }
+    }
+
+    async function carregarAgendamentosAdmin() {
+        try {
+            const agendamentos = await apiGet('/agendamentos');
+            const lista = document.getElementById('lista-agendamentos-admin');
+            lista.innerHTML = '';
+
+            if (!agendamentos || agendamentos.length === 0) {
+                lista.innerHTML = '<li>Nenhum agendamento encontrado.</li>';
+                return;
+            }
+
+            agendamentos.forEach(ag => {
+                const li = document.createElement('li');
+                li.className = 'servico-item';
+                li.style.flexDirection = 'column';
+                li.style.alignItems = 'flex-start';
+
+                const dt = new Date(ag.dataHora);
+                const dataFmt = dt.toLocaleDateString('pt-BR') + ' às ' + dt.toLocaleTimeString('pt-BR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                li.innerHTML = `
+                        <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span><b>${ag.nomeCliente || 'Cliente'}</b> - ${dataFmt}</span>
+                            <span class="status-badge ${ag.status}">${ag.status}</span>
+                        </div>
+                        <div style="width: 100%; display: flex; gap: 10px; align-items: center; justify-content: space-between;">
+                            <small>Obs: ${ag.observacao || 'Nenhuma'}</small>
+                            <div style="display: flex; gap: 5px; align-items: center;">
+                                <select id="status-${ag.id}" style="width: auto; margin-bottom: 0; padding: 5px;">
+                                    <option value="PENDENTE" ${ag.status === 'PENDENTE' ? 'selected' : ''}>PENDENTE</option>
+                                    <option value="CONFIRMADO" ${ag.status === 'CONFIRMADO' ? 'selected' : ''}>CONFIRMADO</option>
+                                    <option value="CONCLUIDO" ${ag.status === 'CONCLUIDO' ? 'selected' : ''}>CONCLUIDO</option>
+                                    <option value="CANCELADO" ${ag.status === 'CANCELADO' ? 'selected' : ''}>CANCELADO</option>
+                                </select>
+                                <button onclick="atualizarStatus('${ag.id}')" style="padding: 6px 12px;">Salvar</button>
+                            </div>
+                        </div>
+                    `;
+                lista.appendChild(li);
+            });
+        } catch (err) {
+            document.getElementById('lista-agendamentos-admin').innerHTML = '<li>Erro ao carregar lista de agendamentos.</li>';
+        }
+    }
+
+    async function atualizarStatus(agendamentoId) {
+        const novoStatus = document.getElementById(`status-${agendamentoId}`).value;
+        try {
+            await apiPatch(`/agendamentos/${agendamentoId}/status?status=${novoStatus}`);
+            alert('Status atualizado com sucesso!');
+            carregarAgendamentosAdmin();
+            carregarRelatorio();
+        } catch (err) {
+            alert('Erro ao atualizar status: ' + err.message);
+        }
+    }
+
+    async function carregarServicosAdmin() {
+        const servicos = await apiGet('/servicos');
+        const lista = document.getElementById('lista-servicos-admin');
+        lista.innerHTML = '';
+
+        servicos.forEach(s => {
+            const li = document.createElement('li');
+            li.className = 'servico-item';
+            li.innerHTML = `
+                    <div>
+                        <b>${s.nome}</b> - R$ ${s.precoAtual.toFixed(2)} <br>
+                        <small>(${s.duracaoMinutos} min)</small>
+                    </div>
+                    <button class="btn-secondary" onclick="toggleServico('${s.id}', ${s.ativo})">
+                        ${s.ativo ? 'Desativar' : 'Ativar'}
+                    </button>
+                `;
+            lista.appendChild(li);
+        });
+    }
+
+    async function toggleServico(id, estaAtivo) {
+        const acao = estaAtivo ? 'desativar' : 'ativar';
+        await apiPatch(`/servicos/${id}/${acao}`);
+        carregarServicosAdmin();
+    }
+
+    carregarRelatorio();
+    carregarAgendamentosAdmin();
+    carregarServicosAdmin();
+</script>
+</body>
+</html>

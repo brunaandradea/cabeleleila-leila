@@ -105,6 +105,30 @@ public class AgendamentoService {
         return agendamentoRepository.save(agendamento);
     }
 
+    public Agendamento atualizarStatus(String agendamentoId, StatusAgendamento novoStatus) {
+        Agendamento agendamento = buscarOuLancarExcecao(agendamentoId);
+
+        if (novoStatus == null) {
+            throw new IllegalArgumentException("Status obrigatório.");
+        }
+
+        StatusAgendamento atual = agendamento.getStatus();
+        if (atual == novoStatus) {
+            return agendamento;
+        }
+
+        boolean transicaoValida =
+                (atual == StatusAgendamento.PENDENTE && (novoStatus == StatusAgendamento.CONFIRMADO || novoStatus == StatusAgendamento.CANCELADO))
+                        || (atual == StatusAgendamento.CONFIRMADO && (novoStatus == StatusAgendamento.CONCLUIDO || novoStatus == StatusAgendamento.CANCELADO));
+
+        if (!transicaoValida) {
+            throw new IllegalStateException("Transição de status inválida: " + atual + " -> " + novoStatus);
+        }
+
+        agendamento.setStatus(novoStatus);
+        return agendamentoRepository.save(agendamento);
+    }
+
     public List<Agendamento> listarTodos() {
         return agendamentoRepository.findAll();
     }

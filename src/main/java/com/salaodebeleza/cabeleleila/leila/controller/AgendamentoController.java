@@ -5,6 +5,7 @@ import com.salaodebeleza.cabeleleila.leila.dto.AgendamentoResponseDTO;
 import com.salaodebeleza.cabeleleila.leila.dto.RelatorioSemanalDTO;
 import com.salaodebeleza.cabeleleila.leila.model.Agendamento;
 import com.salaodebeleza.cabeleleila.leila.model.ItemAgendamento;
+import com.salaodebeleza.cabeleleila.leila.model.StatusAgendamento;
 import com.salaodebeleza.cabeleleila.leila.service.AgendamentoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -54,6 +55,11 @@ public class AgendamentoController {
         return new AgendamentoResponseDTO(agendamento);
     }
 
+    @PatchMapping("/{id}/status")
+    public AgendamentoResponseDTO atualizarStatus(@PathVariable String id, @RequestParam StatusAgendamento status) {
+        return new AgendamentoResponseDTO(agendamentoService.atualizarStatus(id, status));
+    }
+
     @GetMapping("/sugestao-data")
     public Optional<LocalDateTime> sugerirDataAgendamento(@RequestParam String usuarioId, @RequestParam LocalDateTime dataDesejada) {
         return agendamentoService.sugerirDataAgendamento(usuarioId, dataDesejada);
@@ -85,5 +91,4 @@ public class AgendamentoController {
     public RelatorioSemanalDTO relatorioSemanal() {
         return agendamentoService.gerarRelatorioSemanal();
     }
-
 }

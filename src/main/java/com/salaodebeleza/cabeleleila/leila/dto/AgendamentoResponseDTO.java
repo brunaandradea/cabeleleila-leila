@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 public class AgendamentoResponseDTO {
     private final String id;
     private final String usuarioId;
+    private final String nomeCliente;
     private final LocalDateTime dataHora;
     private final StatusAgendamento status;
     private final String observacao;
@@ -17,9 +18,9 @@ public class AgendamentoResponseDTO {
     public AgendamentoResponseDTO(Agendamento agendamento) {
         this.id = agendamento.getId();
         this.usuarioId = agendamento.getUsuario().getId();
+        this.nomeCliente = agendamento.getUsuario().getNome();
         this.dataHora = agendamento.getDataHora();
         this.status = agendamento.getStatus();
         this.observacao = agendamento.getObservacao();
-
     }
 }

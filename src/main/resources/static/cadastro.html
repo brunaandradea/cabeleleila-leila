@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastro de Usuário - Salão da Leila</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="card">
+    <h1>Novo Usuário</h1>
+    <form id="form-cadastro">
+        <label>Nome:</label>
+        <input type="text" id="nome" required>
+
+        <label>E-mail:</label>
+        <input type="email" id="email" required>
+
+        <label>Senha:</label>
+        <input type="password" id="senha" required>
+
+        <label>Telefone:</label>
+        <input type="text" id="telefone" placeholder="11 99999 9999">
+
+        <label>Perfil:</label>
+        <select id="perfil">
+            <option value="CLIENTE">CLIENTE</option>
+            <option value="ADMIN">ADMIN</option>
+        </select>
+
+        <button type="submit">Cadastrar</button>
+    </form>
+    <p><a href="index.html">Voltar para Login</a></p>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+    document.getElementById('form-cadastro').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const usuario = {
+            nome: document.getElementById('nome').value,
+            email: document.getElementById('email').value,
+            senha: document.getElementById('senha').value,
+            telefone: document.getElementById('telefone').value,
+            perfil: document.getElementById('perfil').value
+        };
+        try {
+            await apiPost('/usuarios', usuario);
+            alert('Usuário cadastrado com sucesso!');
+            window.location.href = 'index.html';
+        } catch (err) {
+            alert('Erro ao cadastrar: ' + err.message);
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Meus Agendamentos - Salão da Leila</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="card">
+    <h1>Meus Agendamentos</h1>
+    <ul id="lista-historico">Carregando...</ul>
+    <p><a href="agendar.html">Novo Agendamento</a> | <a href="index.html">Trocar de Usuário</a></p>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+    const usuarioId = localStorage.getItem('usuarioId');
+    if (!usuarioId) window.location.href = 'index.html';
+
+    function toInputDateTimeValue(dataHora) {
+        const dt = new Date(dataHora);
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+    }
+
+    function abrirEdicao(id) {
+        document.getElementById(`edicao-${id}`).style.display = 'block';
+        document.getElementById(`erro-${id}`).textContent = '';
+    }
+
+    function cancelarEdicao(id) {
+        document.getElementById(`edicao-${id}`).style.display = 'none';
+        document.getElementById(`erro-${id}`).textContent = '';
+    }
+
+    async function salvarNovaData(id) {
+        const erroEl = document.getElementById(`erro-${id}`);
+        erroEl.textContent = '';
+
+        const valor = document.getElementById(`nova-data-${id}`).value;
+        if (!valor) {
+            erroEl.textContent = 'Selecione a nova data e hora.';
+            return;
+        }
+
+        const dataHora = valor.length === 16 ? `${valor}:00` : valor;
+
+        try {
+            await apiPatch(`/agendamentos/${id}/data-hora`, { dataHora });
+            alert('Data alterada com sucesso!');
+            carregarHistorico();
+        } catch (erro) {
+            erroEl.textContent = erro.message;
+        }
+    }
+
+    async function carregarHistorico() {
+        try {
+            const agendamentos = await apiGet(`/agendamentos/usuario/${usuarioId}/historico`);
+            const lista = document.getElementById('lista-historico');
+            lista.innerHTML = '';
+
+            if (!agendamentos || agendamentos.length === 0) {
+                lista.innerHTML = '<li>Nenhum agendamento encontrado.</li>';
+                return;
+            }
+
+            for (const ag of agendamentos) {
+                const li = document.createElement('li');
+                li.className = 'servico-item';
+                li.style.flexDirection = 'column';
+                li.style.alignItems = 'flex-start';
+
+                const dataFormatada = new Date(ag.dataHora).toLocaleString('pt-BR');
+
+                li.innerHTML = `
+                    <div style="width: 100%; display: flex; justify-content: space-between; gap: 12px;">
+                        <div>
+                            <b>Data:</b> ${dataFormatada}<br>
+                            <small>Obs: ${ag.observacao || 'Nenhuma'}</small>
+                        </div>
+                        <span class="status-badge ${ag.status}">${ag.status}</span>
+                    </div>
+
+                    <div style="margin-top: 10px;">
+                        <button type="button" class="btn-secondary" onclick="abrirEdicao('${ag.id}')">Editar data</button>
+                    </div>
+
+                    <div id="edicao-${ag.id}" style="display:none; width:100%; margin-top: 10px;">
+                        <input type="datetime-local" id="nova-data-${ag.id}" value="${toInputDateTimeValue(ag.dataHora)}" step="1800">
+                        <div style="display:flex; gap:8px;">
+                            <button type="button" onclick="salvarNovaData('${ag.id}')">Salvar nova data</button>
+                            <button type="button" class="btn-secondary" onclick="cancelarEdicao('${ag.id}')">Cancelar</button>
+                        </div>
+                        <p id="erro-${ag.id}" class="mensagem-erro" style="margin-top: 8px;"></p>
+                    </div>
+                `;
+                lista.appendChild(li);
+            }
+        } catch (err) {
+            alert('Erro ao carregar histórico: ' + err.message);
+        }
+    }
+
+    carregarHistorico();
+</script>
+</body>
+</html>
