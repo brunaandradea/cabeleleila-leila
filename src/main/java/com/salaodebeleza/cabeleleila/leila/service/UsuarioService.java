@@ -1,5 +1,6 @@
 package com.salaodebeleza.cabeleleila.leila.service;
 
+import com.salaodebeleza.cabeleleila.leila.model.Perfil;
 import com.salaodebeleza.cabeleleila.leila.model.Usuario;
 import com.salaodebeleza.cabeleleila.leila.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
@@ -11,15 +12,20 @@ import java.util.Optional;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final UsuarioAuthService usuarioAuthService;
 
-    public UsuarioService(UsuarioRepository usuarioRepository) {
+    public UsuarioService(UsuarioRepository usuarioRepository, UsuarioAuthService usuarioAuthService) {
         this.usuarioRepository = usuarioRepository;
+        this.usuarioAuthService = usuarioAuthService;
     }
 
-    public Usuario cadastrar(Usuario usuario) {
+    public Usuario cadastrar(Usuario usuario, String requisitanteId) {
         Optional<Usuario> usuarioExistente = usuarioRepository.findByEmail(usuario.getEmail());
         if (usuarioExistente.isPresent()) {
             throw new IllegalArgumentException("Email já cadastrado: " + usuario.getEmail());
+        }
+        if (!usuarioAuthService.isAdmin(requisitanteId)) {
+            usuario.setPerfil(Perfil.CLIENTE);
         }
         return usuarioRepository.save(usuario);
     }
@@ -32,7 +38,7 @@ public class UsuarioService {
         return usuarioRepository.findAll();
     }
 
-    public Usuario atualizar(String id, Usuario dadosAtualizados) {
+    public Usuario atualizar(String id, Usuario dadosAtualizados, String requisitanteId) {
         Optional<Usuario> usuarioComEmail = usuarioRepository.findByEmail(dadosAtualizados.getEmail());
         if (usuarioComEmail.isPresent() && !usuarioComEmail.get().getId().equals(id)) {
             throw new IllegalArgumentException("Email já cadastrado: " + dadosAtualizados.getEmail());
@@ -42,7 +48,9 @@ public class UsuarioService {
         usuarioExistente.setEmail(dadosAtualizados.getEmail());
         usuarioExistente.setSenha(dadosAtualizados.getSenha());
         usuarioExistente.setTelefone(dadosAtualizados.getTelefone());
-        usuarioExistente.setPerfil(dadosAtualizados.getPerfil());
+        if (usuarioAuthService.isAdmin(requisitanteId)) {
+            usuarioExistente.setPerfil(dadosAtualizados.getPerfil());
+        }
         return usuarioRepository.save(usuarioExistente);
     }
 

@@ -43,10 +43,22 @@
             return;
         }
 
+        const dataSelecionada = new Date(valor);
+        const diaDaSemana = dataSelecionada.getDay();
+        const hora = dataSelecionada.getHours();
+        if (diaDaSemana === 0 || diaDaSemana === 1) {
+            erroEl.textContent = 'Agendamentos só podem ser feitos de terça a sábado.';
+            return;
+        }
+        if (hora < 8 || hora >= 18) {
+            erroEl.textContent = 'Agendamentos só podem ser feitos entre 08:00 e 18:00.';
+            return;
+        }
+
         const dataHora = valor.length === 16 ? `${valor}:00` : valor;
 
         try {
-            await apiPatch(`/agendamentos/${id}/data-hora`, { dataHora });
+            await apiPatch(`/agendamentos/${id}/data-hora`, {dataHora});
             alert('Data alterada com sucesso!');
             carregarHistorico();
         } catch (erro) {

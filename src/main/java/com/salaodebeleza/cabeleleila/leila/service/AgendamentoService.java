@@ -31,7 +31,23 @@ public class AgendamentoService {
         this.itemAgendamentoRepository = itemAgendamentoRepository;
     }
 
+    private static final LocalTime HORARIO_ABERTURA = LocalTime.of(8, 0);
+    private static final LocalTime HORARIO_FECHAMENTO = LocalTime.of(18, 0);
+
+    private void validarHorarioComercial(LocalDateTime dataHora) {
+        DayOfWeek diaDaSemana = dataHora.getDayOfWeek();
+        if (diaDaSemana == DayOfWeek.SUNDAY || diaDaSemana == DayOfWeek.MONDAY) {
+            throw new IllegalArgumentException("Agendamentos só podem ser feitos de terça a sábado.");
+        }
+
+        LocalTime horario = dataHora.toLocalTime();
+        if (horario.isBefore(HORARIO_ABERTURA) || !horario.isBefore(HORARIO_FECHAMENTO)) {
+            throw new IllegalArgumentException("Agendamentos só podem ser feitos entre 08:00 e 18:00.");
+        }
+    }
+
     public Agendamento cadastrar(String usuarioId, LocalDateTime dataHora, List<String> servicoIds, String observacao) {
+        validarHorarioComercial(dataHora);
         Usuario usuario = usuarioService.buscarPorId(usuarioId);
 
         List<Servico> servicosEscolhidos = new ArrayList<>();
@@ -66,6 +82,7 @@ public class AgendamentoService {
     }
 
     public Agendamento alterarDataHora(String agendamentoId, LocalDateTime novaDataHora) {
+        validarHorarioComercial(novaDataHora);
         Agendamento agendamento = buscarOuLancarExcecao(agendamentoId);
 
         Duration diferenca = Duration.between(LocalDateTime.now(), agendamento.getDataHora());

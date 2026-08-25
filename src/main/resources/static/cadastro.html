@@ -21,12 +21,6 @@
         <label>Telefone:</label>
         <input type="text" id="telefone" placeholder="11 99999 9999">
 
-        <label>Perfil:</label>
-        <select id="perfil">
-            <option value="CLIENTE">CLIENTE</option>
-            <option value="ADMIN">ADMIN</option>
-        </select>
-
         <button type="submit">Cadastrar</button>
     </form>
     <p><a href="index.html">Voltar para Login</a></p>
@@ -41,7 +35,7 @@
             email: document.getElementById('email').value,
             senha: document.getElementById('senha').value,
             telefone: document.getElementById('telefone').value,
-            perfil: document.getElementById('perfil').value
+            perfil: 'CLIENTE'
         };
         try {
             await apiPost('/usuarios', usuario);

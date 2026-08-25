@@ -75,6 +75,18 @@ async function realizarAgendamento() {
         return;
     }
 
+    const dataSelecionada = new Date(dataHoraInput);
+    const diaDaSemana = dataSelecionada.getDay();
+    const hora = dataSelecionada.getHours();
+    if (diaDaSemana === 0 || diaDaSemana === 1) {
+        if (erro) erro.textContent = 'Agendamentos só podem ser feitos de terça a sábado.';
+        return;
+    }
+    if (hora < 8 || hora >= 18) {
+        if (erro) erro.textContent = 'Agendamentos só podem ser feitos entre 08:00 e 18:00.';
+        return;
+    }
+
     const dataHoraIso = dataHoraInput.length === 16 ? `${dataHoraInput}:00` : dataHoraInput;
 
     try {
@@ -83,7 +95,7 @@ async function realizarAgendamento() {
         if (sugestao) {
             const dt = new Date(sugestao);
             const dataFmt = dt.toLocaleDateString('pt-BR');
-            const horaFmt = dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            const horaFmt = dt.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
 
             const aceita = confirm(
                 `Já existe um agendamento na semana para ${dataFmt} às ${horaFmt}.` +
